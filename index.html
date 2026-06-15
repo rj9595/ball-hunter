@@ -354,7 +354,7 @@ async function loadLeaderboard() {
     } 
     else if (rank === 2) {
       medal = "🥈";
-      color = "#C0C0C0";
+      color = "#F5F5F5";
     } 
     else if (rank === 3) {
       medal = "🥉";
@@ -418,9 +418,7 @@ function setupRealtimeLeaderboard() {
         loadLeaderboard(); // 🔥 فقط وقتی واقعاً دیتا تغییر کرد
       }
     )
-    .subscribe((status) => {
-      console.log("Realtime status:", status);
-    });
+    .subscribe();
 }
 
 
