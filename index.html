@@ -26,6 +26,30 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
   margin:10px;
 }
 
+#profileBox{
+  width:min(60vw,320Px);
+  margin:12px auto;
+  padding:12px 16px;
+
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  background: linear-gradient(135deg, #1a1a1a, #111);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+
+  box-shadow:
+    0 8px 20px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.05);
+
+  font-size:15px;
+  color:#fff;
+
+  backdrop-filter: blur(6px);
+  transition: all 0.3s ease;
+}
+
 #game{
   width:min(90vw,500px);
   aspect-ratio:1;
@@ -41,9 +65,21 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
   width:40px;
   height:40px;
   border-radius:50%;
-  background:gold;
   position:absolute;
   cursor:pointer;
+
+  background: radial-gradient(
+    circle at 30% 30%,
+    #fff8b0 0%,
+    #ffd700 30%,
+    #ffb300 70%,
+    #c88700 100%
+  );
+
+  box-shadow:
+    inset -4px -4px 8px rgba(0,0,0,0.35),
+    inset 3px 3px 6px rgba(255,255,255,0.6),
+    0 4px 10px rgba(255,215,0,0.4);
 }
 
 button{
@@ -129,11 +165,16 @@ input:focus{
 <div id="info">
   <div>⭐ <span id="score">0</span></div>
   <div>⏱ <span id="time">25</span></div>
-  <div>🏆 بهترین: <span id="highscore">0</span></div>
+  <div>🏆 بهترین امتیاز <span id="highscore">0</span></div>
 </div>
 
 <button onclick="startGame()">🎮 شروع بازی</button>
 <button onclick="changeName()">✏️ تغییر نام</button>
+
+<div id="profileBox">
+  <span id="profileName">👤 -</span>
+  <span id="profileRank">😮 رتبه: -</span>
+</div>
 
 <div id="game"></div>
 
@@ -175,6 +216,29 @@ let highscore = localStorage.getItem("highscore") || 0;
 document.getElementById("highscore").textContent = highscore;
 
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// ================== پروفایل =================
+function updateProfileBox(data) {
+
+  const profileName = document.getElementById("profileName");
+  const profileRank = document.getElementById("profileRank");
+
+  profileName.textContent = `👤 ${playerName}`;
+
+  let rank = "-";
+
+  if (data && data.length) {
+    const sorted = [...data].sort((a, b) => b.score - a.score);
+
+    const index = sorted.findIndex(p => p.name === playerName);
+
+    if (index !== -1) {
+      rank = index + 1;
+    }
+  }
+
+  profileRank.textContent = `😮 رتبه: ${rank}`;
+}
 
 // ================== Ball Sound =================
 function playPopSound() {
@@ -251,28 +315,41 @@ async function saveName() {
   const name = document.getElementById("nameInput").value.trim();
   if (!name) return alert("اسم وارد کن");
 
-  const oldName = localStorage.getItem("playerName");
+  // 1️⃣ بررسی وجود اسم
+  const { data: exists, error: checkError } = await client
+    .from("players")
+    .select("name")
+    .eq("name", name)
+    .maybeSingle();
 
-  if (oldName) {
-    await client
-      .from("players")
-      .update({ name })
-      .eq("name", oldName);
-  } else {
-    await client.from("players").upsert({
-      name,
-      score: 0
-    }, { onConflict: "name" });
+  if (checkError) {
+    console.log(checkError);
+    return;
   }
 
-  // 🔥 آپدیت localStorage
+  // 2️⃣ اگر اسم وجود داشت → خطا بده
+  if (exists) {
+    alert("❌ این اسم قبلاً انتخاب شده است!");
+    return;
+  }
+
+  // 3️⃣ اگر نبود → ثبت کن
+  const { error } = await client.from("players").insert({
+    name,
+    score: 0
+  });
+
+  if (error) {
+    console.log("DB ERROR:", error);
+    return;
+  }
+
+  // 4️⃣ ذخیره در لوکال
   playerName = name;
   localStorage.setItem("playerName", name);
 
-  // 🔥 بستن modal
   document.getElementById("nameModal").style.display = "none";
 
-  // 🚀 مهم‌ترین بخش: ریفرش کامل leaderboard
   await loadLeaderboard();
 }
 
@@ -428,6 +505,7 @@ async function loadLeaderboard() {
     .select("*")
     .order("score", { ascending: false })
     .limit(10);
+    updateProfileBox(data);
 
   const board = document.getElementById("board");
   board.innerHTML = "";
