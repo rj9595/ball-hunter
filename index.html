@@ -95,6 +95,29 @@ input:focus{
   padding:10px;
 }
 
+.score-popup{
+  position:absolute;
+  color:#FFD700;
+  font-size:24px;
+  font-weight:bold;
+  pointer-events:none;
+  text-shadow:0 0 10px gold;
+  animation: popup 0.7s forwards;
+  z-index:999;
+}
+
+@keyframes popup{
+  from{
+    opacity:1;
+    transform:translateY(0);
+  }
+
+  to{
+    opacity:0;
+    transform:translateY(-40px);
+  }
+}
+
 </style>
 
 </head>
@@ -123,13 +146,14 @@ input:focus{
 <div id="nameModal">
   <div class="modalBox">
     <h3 style="font-size: 35px; font-family: nazanin;">بـرای شـروع</h3>
-    <p style="font-size: 25px; font-family: nazanin;">اول نـام وارد کـن</p>
+    <p style="font-size: 25px; font-family: nazanin;">😎اول نـام وارد کـن</p>
     <input id="nameInput" style="font-family: nazanin; font-size: 15px;" placeholder="نام شما">
     <button id="saveName" style="padding: 1px 66px; margin-top: 15px; font-size: 30px;" onclick="saveName()">ثبت</button>
   </div>
 </div>
 
 <script>
+
 const SUPABASE_URL = "https://dceqzskouoblluxrdgoi.supabase.co";
 const SUPABASE_KEY = "sb_publishable_OaHzdHhVIezzn49Hf0LGkQ_rzvv7vWQ";
 
@@ -149,6 +173,34 @@ const timeEl = document.getElementById("time");
 
 let highscore = localStorage.getItem("highscore") || 0;
 document.getElementById("highscore").textContent = highscore;
+
+// ================== Ball Sound =================
+function playPopSound() {
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.type = "sine";
+
+  osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(
+    120,
+    audioCtx.currentTime + 0.08
+  );
+
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(
+    0.001,
+    audioCtx.currentTime + 0.08
+  );
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.08);
+}
 
 // ================= INIT =================
 window.onload = async () => {
@@ -241,11 +293,33 @@ function createCoin() {
 
   moveCoin(coin);
 
+  // ============ Click COIN ============
   coin.onclick = () => {
-    score++;
-    scoreEl.textContent = score;
-    createCoin();
-  };
+
+    playPopSound();
+
+  const rect = coin.getBoundingClientRect();
+
+  const popup = document.createElement("div");
+
+  popup.className = "score-popup";
+  popup.textContent = "+1";
+
+  popup.style.position = "fixed";
+  popup.style.left = (rect.left + rect.width / 2 - 10) + "px";
+  popup.style.top = rect.top + "px";
+
+  document.body.appendChild(popup);
+
+  setTimeout(() => {
+    popup.remove();
+  }, 700);
+
+  score++;
+  scoreEl.textContent = score;
+
+  createCoin();
+};
 
   game.appendChild(coin);
 
