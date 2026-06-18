@@ -28,7 +28,7 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
 
 #profileBox{
   width:100%;
-  max-width:450px;
+  max-width:420px;
   margin:10px auto;
   padding:10px 12px;
 
@@ -36,7 +36,7 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
   flex-direction:row;
   justify-content:space-between;
   align-items:center;
-  gap:10px;
+  gap:8px;
 
   box-sizing:border-box;
 
@@ -49,45 +49,73 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
     inset 0 1px 0 rgba(255,255,255,0.05);
 
   color:#fff;
+
   font-size:clamp(11px, 2.5vw, 13px);
   backdrop-filter: blur(6px);
+
+  overflow:hidden; /* مهم برای موبایل */
 }
 
-/* 🔥 همه چیز در یک خط */
+/* 🧩 دو بخش */
 .profileCard{
   display:flex;
-  flex-direction:row;   /* مهم */
-  gap:8px;
+  flex-direction:row;
   align-items:center;
+  gap:6px;
+
   flex:1;
   min-width:0;
+
   white-space:nowrap;
-  font-size: 14px;
+  overflow:hidden;
 }
 
-/* چپ و راست فقط فاصله گرفتن */
+/* چپ */
+.profileCard.left{
+  justify-content:flex-start;
+}
+
+/* راست */
 .profileCard.right{
   justify-content:flex-end;
-  font-family: nazanin;
-  font-size: 16px;
 }
 
-/* جلوگیری از شکستن متن */
+/* متن‌ها */
 .profileCard span{
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
 }
 
+/* اسم کاربر مهم‌تر */
+#profileName{
+  font-weight:bold;
+  max-width:90px;
+}
+
 /* 📱 موبایل */
 @media (max-width:480px){
+
   #profileBox{
-    gap:6px;
     padding:8px 10px;
+    gap:6px;
   }
 
   .profileCard{
-    gap:6px;
+    gap:5px;
+    font-size:12px;
+  }
+
+  #profileName{
+    max-width:70px;
+  }
+
+  /* کمی فشرده‌تر */
+  #profileLevel,
+  #profileXP,
+  #profileRankScore,
+  #profileRankLevel{
+    font-size:11px;
   }
 }
 
@@ -940,15 +968,15 @@ async function loadLeaderboard() {
 
   // 👑 رتبه‌های اول تا سوم (مثل امتیاز)
   if (rank === 1) {
-    medal = "👑 افسانه";
+    medal = "💎 ";
     color = "#FFD700";
   } 
   else if (rank === 2) {
-    medal = "🥈 اسطوره";
+    medal = "👑 ";
     color = "#C0C0C0";
   } 
   else if (rank === 3) {
-    medal = "🥉 قهرمان";
+    medal = "💪 ";
     color = "#CD7F32";
   } 
   else {
