@@ -27,13 +27,18 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
 }
 
 #profileBox{
-  width:min(60vw,320Px);
-  margin:12px auto;
-  padding:12px 16px;
+  width:100%;
+  max-width:450px;
+  margin:10px auto;
+  padding:10px 12px;
 
   display:flex;
+  flex-direction:row;
   justify-content:space-between;
   align-items:center;
+  gap:10px;
+
+  box-sizing:border-box;
 
   background: linear-gradient(135deg, #1a1a1a, #111);
   border: 1px solid rgba(255,255,255,0.08);
@@ -43,11 +48,47 @@ h1{color:gold; margin-top:10px; font-family: nazanin; font-size: 35px;}
     0 8px 20px rgba(0,0,0,0.4),
     inset 0 1px 0 rgba(255,255,255,0.05);
 
-  font-size:15px;
   color:#fff;
-
+  font-size:clamp(11px, 2.5vw, 13px);
   backdrop-filter: blur(6px);
-  transition: all 0.3s ease;
+}
+
+/* 🔥 همه چیز در یک خط */
+.profileCard{
+  display:flex;
+  flex-direction:row;   /* مهم */
+  gap:8px;
+  align-items:center;
+  flex:1;
+  min-width:0;
+  white-space:nowrap;
+  font-size: 14px;
+}
+
+/* چپ و راست فقط فاصله گرفتن */
+.profileCard.right{
+  justify-content:flex-end;
+  font-family: nazanin;
+  font-size: 16px;
+}
+
+/* جلوگیری از شکستن متن */
+.profileCard span{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+/* 📱 موبایل */
+@media (max-width:480px){
+  #profileBox{
+    gap:6px;
+    padding:8px 10px;
+  }
+
+  .profileCard{
+    gap:6px;
+  }
 }
 
 #game{
@@ -98,7 +139,7 @@ button{
   border-radius:20px;
   cursor:pointer;
   font-family:nazanin;
-  font-size: 15px;
+  font-size: 18px;
   background:rgba(199, 145, 10, 0.747);
   color:#fff;
   margin:1px;
@@ -135,13 +176,63 @@ input:focus{
   width: 80%;
 }
 
-#leaderboard{
-  width:min(90vw,500px);
-  margin:10px auto;
-  border:2px solid #444;
-  box-shadow: 0px 0px 10px 5px rgba(189, 139, 0, 0.342);
-  border-radius:10px;
+#leaderboards{
+  width:100%;
+  max-width:530px;
+  margin:12px auto;
+
+  display:flex;
+  flex-direction:row;
+  justify-content:center;
+  align-items:flex-start;
+
+  gap:8px;
+  padding:0 10px;
+
+  box-sizing:border-box;
+}
+
+/* هر جدول */
+.board{
+  flex:0 0 200px;
+  min-width:0;
+
+  background:#1a1a1a;
+  border-radius:12px;
   padding:10px;
+
+  color:white;
+  font-size:clamp(11px, 2.5vw, 13px); /* 🔥 ریسپانسیو واقعی */
+
+  overflow:hidden;
+}
+
+/* عنوان */
+.board h3{
+  font-family: nazanin;
+  font-size:clamp(20px, 3vw, 20px);
+  margin:0 0 8px 0;
+  text-align:center;
+}
+
+/* آیتم‌ها */
+.board div{
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  padding:3px 0;
+}
+
+/* 📱 موبایل خیلی کوچک */
+@media (max-width: 480px){
+  #leaderboards{
+    gap:8px;
+    padding:0 6px;
+  }
+
+  .board{
+    padding:8px;
+  }
 }
 
 .score-popup{
@@ -233,15 +324,36 @@ input:focus{
 <button onclick="openFeedback()">💬 حرفی انتقادی</button>
 
 <div id="profileBox">
-  <span id="profileName">👤 -</span>
-  <span id="profileRank">😮 رتبه: -</span>
+
+  <div class="profileCard left">
+    <span id="profileName" style="padding-left: 19px;">👤 -</span>
+    <span id="profileLevel">Level: -</span>
+    <span id="profileXP">⚡XP: -</span>
+  </div>
+
+  <div class="profileCard right">
+    <span id="profileRankScore">🏆 رتبه امتیاز: -</span>
+    <span id="profileRankLevel">📊 رتبه لول: -</span>
+  </div>
+
 </div>
 
 <div id="game"></div>
 
-<div id="leaderboard">
-<h3>🏆 برترین بازیکنان</h3>
-<div id="board"></div>
+<div id="leaderboards">
+
+  <!-- 📊 Left: Top Level -->
+  <div class="board">
+    <h3>📊 بالاترین لول</h3>
+    <div id="levelBoard" style="font-size: 15px;"></div>
+  </div>
+
+  <!-- 🏆 Right: Top Score -->
+  <div class="board">
+    <h3>🏆 بهترین امتیاز</h3>
+    <div id="scoreBoard" style="font-size: 13px;"></div>
+  </div>
+
 </div>
 
 <!-- NAME MODAL -->
@@ -296,6 +408,8 @@ let timeLeft = 25;
 let playerName = "";
 let timerInterval;
 let moveInterval;
+let xp = 0;
+let level = 1;
 let currentCoin = null;
 let fireShown = false;
 let diamondShown = false;
@@ -303,6 +417,9 @@ let diamondShown = false;
 const game = document.getElementById("game");
 const scoreEl = document.getElementById("score");
 const timeEl = document.getElementById("time");
+const scoreBoard = document.getElementById("scoreBoard");
+const levelBoard = document.getElementById("levelBoard");
+const coin = document.getElementById("coin");
 
 let highscore = localStorage.getItem("highscore") || 0;
 document.getElementById("highscore").textContent = highscore;
@@ -313,23 +430,56 @@ const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 function updateProfileBox(data) {
 
   const profileName = document.getElementById("profileName");
-  const profileRank = document.getElementById("profileRank");
+  const profileLevel = document.getElementById("profileLevel");
+  const profileXP = document.getElementById("profileXP");
+
+  const profileRankScore = document.getElementById("profileRankScore");
+  const profileRankLevel = document.getElementById("profileRankLevel");
+
+  if (
+    !profileName ||
+    !profileLevel ||
+    !profileXP ||
+    !profileRankScore ||
+    !profileRankLevel
+  ) {
+    console.error("❌ Profile elements not found");
+    return;
+  }
 
   profileName.textContent = `👤 ${playerName}`;
 
-  let rank = "-";
+  let scoreRank = "-";
+  let levelRank = "-";
+
+  let xp = 0;
+  let level = 0;
 
   if (data && data.length) {
-    const sorted = [...data].sort((a, b) => b.score - a.score);
 
-    const index = sorted.findIndex(p => p.name === playerName);
+    const me = data.find(p => p.name === playerName);
 
-    if (index !== -1) {
-      rank = index + 1;
+    if (me) {
+
+      xp = me.xp || 0;
+      level = me.level || 0;
+
+      const sortedScore = [...data].sort((a, b) => b.score - a.score);
+      scoreRank = sortedScore.findIndex(p => p.name === playerName) + 1;
+
+      const sortedLevel = [...data].sort((a, b) => b.level - a.level);
+      levelRank = sortedLevel.findIndex(p => p.name === playerName) + 1;
     }
   }
 
-  profileRank.textContent = `😮 رتبه: ${rank}`;
+  profileLevel.textContent = `Level: ${level}`;
+  profileXP.textContent = `⚡ XP: ${xp}`;
+
+  profileRankScore.textContent =
+    `🏆 رتبه امتیاز: ${scoreRank}`;
+
+  profileRankLevel.textContent =
+    `📊 رتبه لول: ${levelRank}`;
 }
 
 // ================== نظرات =================
@@ -410,37 +560,27 @@ window.onload = async () => {
   playerName = localStorage.getItem("playerName");
 
   if (!playerName) {
-
     document.getElementById("nameModal").style.display = "flex";
-
-    await loadLeaderboard();
-    setupRealtimeLeaderboard();
-
     return;
   }
 
-  const { data } = await client
-    .from("players")
-    .select("name")
-    .eq("name", playerName);
-
-  if (!data || data.length === 0) {
-
-    localStorage.removeItem("playerName");
-    localStorage.removeItem("highscore");
-
-    playerName = "";
-
-    document.getElementById("nameModal").style.display = "flex";
-
-    await loadLeaderboard();
-    setupRealtimeLeaderboard();
-
-    return;
-  }
-
-  await loadLeaderboard();
+  // 🚀 سریع لود بازی (بدون صبر)
+  loadLeaderboard();
   setupRealtimeLeaderboard();
+
+  // 🔍 چک کاربر در پس‌زمینه (بدون قفل کردن UI)
+  (async () => {
+    const { data } = await client
+      .from("players")
+      .select("name")
+      .eq("name", playerName);
+
+    if (!data || data.length === 0) {
+      localStorage.removeItem("playerName");
+      document.getElementById("nameModal").style.display = "flex";
+    }
+  })();
+
 };
 
 // ================= SAVE NAME =================
@@ -524,63 +664,75 @@ function createCoin() {
 
   currentCoin = coin;
 
-  if(score >= 50){
-  coin.classList.add("diamondCoin");
-  }
-  else if(score >= 40){
-  coin.classList.add("fireCoin");
+  // 🔥 حالت‌ها
+  if (score >= 50) {
+    coin.classList.add("diamondCoin");
+  } else if (score >= 40) {
+    coin.classList.add("fireCoin");
   }
 
   moveCoin(coin);
 
-  // ============ Click COIN ============
+  // ================= CLICK COIN =================
   coin.onclick = () => {
 
-  if(score >= 50){
-  playDiamondSound();
-  }
-  else if(score >= 40){
-  playFireSound();
-  }
-  else{
-  playPopSound();
-  }
+    if (score >= 50) {
+      playDiamondSound();
+    } else if (score >= 40) {
+      playFireSound();
+    } else {
+      playPopSound();
+    }
 
-  const rect = coin.getBoundingClientRect();
+    const rect = coin.getBoundingClientRect();
 
-  const popup = document.createElement("div");
+    const popup = document.createElement("div");
+    popup.className = "score-popup";
+    popup.textContent = "+1";
 
-  popup.className = "score-popup";
-  popup.textContent = "+1";
+    popup.style.position = "fixed";
+    popup.style.left = (rect.left + rect.width / 2 - 10) + "px";
+    popup.style.top = rect.top + "px";
 
-  popup.style.position = "fixed";
-  popup.style.left = (rect.left + rect.width / 2 - 10) + "px";
-  popup.style.top = rect.top + "px";
+    document.body.appendChild(popup);
 
-  document.body.appendChild(popup);
+    setTimeout(() => {
+      popup.remove();
+    }, 700);
 
-  setTimeout(() => {
-    popup.remove();
-  }, 700);
+    // ================= SCORE =================
+    score++;
+    scoreEl.textContent = score;
 
-  score++;
-  scoreEl.textContent = score;
+    // ================= XP / LEVEL =================
+    xp++;
 
-  if(score >= 40 && !fireShown){
-  fireShown = true;
-  showStageMessage("🔥 بالای 40 امیتاز");
-  shakeGame();
-  playFireSound();
-  }
+    if (xp >= 100) {
+      xp = 0;
+      level++;
+      showStageMessage("⬆️ لول بالا!");
+      shakeGame();
+    }
 
-  if(score >= 50 && !diamondShown){
-  diamondShown = true;
-  showStageMessage("💎 بالای 50 امتیاز");
-  shakeGame();
-  playDiamondSound();
-  }
+    profileXP.textContent = `⚡ XP: ${xp}`;
+    profileLevel.textContent = `Level: ${level}`;
 
-  createCoin();
+    // ================= STAGES =================
+    if (score >= 40 && !fireShown) {
+      fireShown = true;
+      showStageMessage("🔥 بالای 40 امیتاز");
+      shakeGame();
+      playFireSound();
+    }
+
+    if (score >= 50 && !diamondShown) {
+      diamondShown = true;
+      showStageMessage("💎 بالای 50 امتیاز");
+      shakeGame();
+      playDiamondSound();
+    }
+
+    createCoin();
   };
 
   game.appendChild(coin);
@@ -664,7 +816,7 @@ async function startGame() {
         document.getElementById("highscore").textContent = finalScore;
       }
     }
-  }, 1000);
+  }, 10000);
 }
 
 // ================= SAVE SCORE (BEST SCORE ONLY) =================
@@ -672,7 +824,7 @@ async function saveScore(finalScore) {
 
   const { data } = await client
     .from("players")
-    .select("score")
+    .select("score,xp,level")
     .eq("name", playerName);
 
   const oldScore = data?.[0]?.score ?? 0;
@@ -683,7 +835,9 @@ async function saveScore(finalScore) {
     .from("players")
     .upsert({
       name: playerName,
-      score: bestScore
+      score: bestScore,
+      xp: xp,
+      level: level
     }, {
       onConflict: "name"
     });
@@ -694,79 +848,146 @@ async function saveScore(finalScore) {
 }
 
 // ================= LEADERBOARD =================
-
-
 async function loadLeaderboard() {
 
-  // 1️⃣ گرفتن Top 10 برای نمایش لیست
-  const { data: top10 } = await client
+  const { data: top10, error: e1 } = await client
     .from("players")
-    .select("*")
+    .select("name,score,level,xp")
     .order("score", { ascending: false })
     .limit(10);
 
-  // 2️⃣ گرفتن کل دیتا فقط برای محاسبه رتبه
+  const { data: topLevel, error: e2 } = await client
+    .from("players")
+    .select("name,score,level,xp")
+    .order("level", { ascending: false })
+    .limit(10);
+
+  // 👇 فقط برای محاسبه رتبه واقعی پروفایل
+  
   const { data: allPlayers } = await client
     .from("players")
-    .select("*")
-    .order("score", { ascending: false });
+    .select("name,score,level,xp")
 
-  const board = document.getElementById("board");
-  board.innerHTML = "";
+  console.log("score:", top10);
+  console.log("level:", topLevel);
 
-  // ===== نمایش لیست =====
-  (top10 || []).forEach((p, i) => {
+  const scoreBoard = document.getElementById("scoreBoard");
+  const levelBoard = document.getElementById("levelBoard");
 
-    const rank = i + 1;
+  if (!scoreBoard || !levelBoard) {
+    console.error("❌ Board elements not found in HTML");
+    return;
+  }
 
-    let medal = "";
-    let color = "#aaa";
+  scoreBoard.innerHTML = "";
+  levelBoard.innerHTML = "";
 
-    if (rank === 1) {
-      medal = "👑 پادشاه بازی";
-      color = "#FFD700";
-    } 
-    else if (rank === 2) {
-      medal = "🥈";
-      color = "#C0C0C0";
-    } 
-    else if (rank === 3) {
-      medal = "🥉";
-      color = "#CD7F32";
+  // ================= SCORE BOARD =================
+(top10 || []).forEach((p, i) => {
+
+  const rank = i + 1;
+
+  let medal = "";
+  let color = "#aaa";
+
+  if (rank === 1) {
+    medal = "🥇 ";
+    color = "#FFD700";
+  } 
+  else if (rank === 2) {
+    medal = "🥈 ";
+    color = "#C0C0C0";
+  } 
+  else if (rank === 3) {
+    medal = "🥉 ";
+    color = "#CD7F32";
+  } 
+  else {
+    medal = `#${rank}`;
+    color = "#aaa";
+  }
+
+  const row = document.createElement("div");
+
+  row.style.cssText = `
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:5px;
+    margin:3px;
+    border-radius:10px;
+    transition: all 0.3s ease;
+    color: ${color};
+    font-weight: ${rank <= 3 ? "bold" : "normal"};
+  `;
+
+  row.innerHTML = `
+    <span>${medal}</span>
+    <b>${p.name}</b>
+    <span>⭐ ${p.score}</span>
+  `;
+
+  scoreBoard.appendChild(row);
+});
+
+  // ================= LEVEL BOARD =================
+(topLevel || []).forEach((p, i) => {
+
+  const rank = i + 1;
+
+  let medal = "";
+  let color = "#aaa";
+
+  // 👑 رتبه‌های اول تا سوم (مثل امتیاز)
+  if (rank === 1) {
+    medal = "👑 افسانه";
+    color = "#FFD700";
+  } 
+  else if (rank === 2) {
+    medal = "🥈 اسطوره";
+    color = "#C0C0C0";
+  } 
+  else if (rank === 3) {
+    medal = "🥉 قهرمان";
+    color = "#CD7F32";
+  } 
+  else {
+
+    // 🎚 فقط تا لول 2 Rookie
+    if (p.level <= 2) {
+      medal = "تازه کار";
+    } else {
+      medal = ""; // 👈 از لول 3 به بعد هیچ چیزی نمایش نده
     }
+  }
 
-    const row = document.createElement("div");
+  const row = document.createElement("div");
 
-    row.style.cssText = `
-      display:flex;
-      justify-content:center;
-      gap:10px;
-      padding:6px;
-      margin:4px;
-      border-radius:10px;
-      transition: all 0.4s ease;
-      transform: translateY(10px);
-      opacity: 0;
-      color: ${color};
-      font-weight: ${rank <= 3 ? "bold" : "normal"};
-    `;
+  row.style.cssText = `
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    padding:5px;
+    margin:3px;
+    border-radius:10px;
+    transition: all 0.3s ease;
+    color: ${color};
+    font-weight: ${rank <= 3 ? "bold" : "normal"};
+  `;
 
-    row.innerHTML = `
-      <span>${medal ? medal : `#${rank}`}</span>
-      <b>${p.name}</b>
-      <span>⭐ ${p.score}</span>
-    `;
+  row.innerHTML = `
+    <span>${medal}</span>
+    <b>${p.name}</b>
+    <span>${p.level}</span>
+  `;
 
-    board.appendChild(row);
+  levelBoard.appendChild(row);
+});
 
-    setTimeout(() => {
-      row.style.transform = "translateY(0)";
-      row.style.opacity = "1";
-    }, 50 * i);
-  });
-
-  // 3️⃣ آپدیت پروفایل با کل دیتا (نه فقط top10)
+  // 👇 آپدیت پروفایل با کل بازیکن‌ها
   updateProfileBox(allPlayers);
+
+  console.log("Leaderboard rendered ✔");
 }
 
 
