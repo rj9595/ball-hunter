@@ -868,9 +868,11 @@ async function loadPlayerData() {
     xp = data.xp || 0;
     level = data.level || 1;
 
+    playerName = data.name; // 🔥 مهم: sync اسم واقعی
+
     profileName.textContent = `👤 ${data.name}`;
 
-    updateLevel(); // 🔥 آپدیت UI
+    updateLevel();
   }
 }
 
@@ -989,10 +991,12 @@ if (xpFill) {
 // ================= SAVE SCORE (BEST SCORE ONLY) =================
 async function saveScore(finalScore) {
 
+  const playerId = getPlayerId();
+
   const { data } = await client
     .from("players")
-    .select("score,xp,level")
-    .eq("name", playerName);
+    .select("score")
+    .eq("id", playerId);
 
   const oldScore = data?.[0]?.score ?? 0;
 
@@ -1001,12 +1005,13 @@ async function saveScore(finalScore) {
   const { error } = await client
     .from("players")
     .upsert({
+      id: playerId,
       name: playerName,
       score: bestScore,
       xp: xp,
       level: level
     }, {
-      onConflict: "name"
+      onConflict: "id"
     });
 
   if (error) {
